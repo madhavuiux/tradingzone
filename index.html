@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,37 +75,6 @@
             font-size: 18px;
         }
 
-        .position-toggle {
-            display: flex;
-            gap: 0;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-strong);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .position-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .position-btn:hover {
-            background: var(--hover-bg);
-        }
-
-        .position-btn.active {
-            background: var(--text-primary);
-            color: var(--bg-primary);
-        }
-
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -137,9 +107,82 @@
             font-size: 14px;
         }
 
+        .position-toggle {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-strong);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .position-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .position-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .position-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        .trade-type-group {
+            margin-bottom: 24px;
+        }
+
+        .trade-type-label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 24px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--text-primary);
+        }
+
+        .radio-option label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
         .input-group {
             margin-bottom: 24px;
             position: relative;
+        }
+
+        .hidden {
+            display: none;
         }
 
         label {
@@ -165,7 +208,6 @@
             pointer-events: none;
         }
 
-        input[type="number"],
         input[type="text"] {
             width: 100%;
             padding: 12px 16px;
@@ -181,7 +223,6 @@
             padding-left: 36px;
         }
 
-        input[type="number"]:focus,
         input[type="text"]:focus {
             outline: none;
             border-color: var(--border-strong);
@@ -190,16 +231,6 @@
         input::placeholder {
             color: var(--text-secondary);
             opacity: 0.6;
-        }
-
-        /* Hide number input spinners */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
         }
 
         .risk-buttons {
@@ -369,7 +400,7 @@
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()">
+    <button class="theme-toggle" id="themeToggle">
         <span class="theme-icon" id="themeIcon">🌙</span>
         <span id="themeText">Dark</span>
     </button>
@@ -380,8 +411,27 @@
             <p class="subtitle">Calculate your optimal lot size and risk</p>
 
             <div class="position-toggle">
-                <button class="position-btn active" data-position="long" onclick="setPosition('long')">Long Position</button>
-                <button class="position-btn" data-position="short" onclick="setPosition('short')">Short Position</button>
+                <button class="position-btn active" id="longBtn">Long Position</button>
+                <button class="position-btn" id="shortBtn">Short Position</button>
+            </div>
+
+            <div class="trade-type-group">
+                <span class="trade-type-label">Trade Type</span>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="equityRadio" name="tradeType" value="equity" checked>
+                        <label for="equityRadio">Equity</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="fnoRadio" name="tradeType" value="fno">
+                        <label for="fnoRadio">F&O</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group hidden" id="fnoLotSizeGroup">
+                <label for="fnoLotSize">Lot Size (Quantity per Lot)</label>
+                <input type="text" id="fnoLotSize" placeholder="e.g., 75 for Nifty 50" inputmode="numeric">
             </div>
 
             <div class="input-group">
@@ -431,9 +481,9 @@
 
             <div class="results">
                 <div class="result-item">
-                    <div class="result-label">Lot Size You Can Buy</div>
+                    <div class="result-label" id="lotSizeLabel">Lot Size You Can Buy</div>
                     <div class="result-value neutral" id="lotSize">0</div>
-                    <div class="result-subtext">shares</div>
+                    <div class="result-subtext" id="lotSizeSubtext">shares</div>
                 </div>
                 <div class="result-item">
                     <div class="result-label">Profit On Target</div>
@@ -449,13 +499,13 @@
                 </div>
             </div>
 
-            <button class="reset-btn" onclick="resetCalculator()">Reset All</button>
+            <button class="reset-btn" id="resetBtn">Reset All</button>
         </div>
     </div>
 
     <footer>
         <span>Made by Madhav Sajikumar</span>
-        <a href="https://www.linkedin.com/in/madhavsajikumar/" target="_blank" rel="noopener noreferrer" class="linkedin-link" aria-label="LinkedIn Profile" onclick="window.open('https://www.linkedin.com/in/madhavsajikumar/', '_blank'); return false;">
+        <a href="https://www.linkedin.com/in/madhavsajikumar/" target="_blank" rel="noopener noreferrer" class="linkedin-link" aria-label="LinkedIn Profile">
             <svg class="linkedin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="pointer-events: none;">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
             </svg>
@@ -463,37 +513,36 @@
     </footer>
 
     <script>
-        const inputs = {
+        // Get all DOM elements
+        const elements = {
             capital: document.getElementById('capital'),
             riskPercent: document.getElementById('riskPercent'),
             entryPrice: document.getElementById('entryPrice'),
             stopLoss: document.getElementById('stopLoss'),
-            targetPrice: document.getElementById('targetPrice')
-        };
-
-        const outputs = {
+            targetPrice: document.getElementById('targetPrice'),
+            fnoLotSize: document.getElementById('fnoLotSize'),
+            fnoLotSizeGroup: document.getElementById('fnoLotSizeGroup'),
+            equityRadio: document.getElementById('equityRadio'),
+            fnoRadio: document.getElementById('fnoRadio'),
+            longBtn: document.getElementById('longBtn'),
+            shortBtn: document.getElementById('shortBtn'),
             lotSize: document.getElementById('lotSize'),
+            lotSizeLabel: document.getElementById('lotSizeLabel'),
+            lotSizeSubtext: document.getElementById('lotSizeSubtext'),
             profitOnTarget: document.getElementById('profitOnTarget'),
             maxLoss: document.getElementById('maxLoss'),
-            riskReward: document.getElementById('riskReward')
+            riskReward: document.getElementById('riskReward'),
+            resetBtn: document.getElementById('resetBtn'),
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.getElementById('themeIcon'),
+            themeText: document.getElementById('themeText')
         };
 
         const riskButtons = document.querySelectorAll('.risk-btn');
-        const positionButtons = document.querySelectorAll('.position-btn');
-        let currentPosition = 'long';
 
-        // Position Management
-        function setPosition(position) {
-            currentPosition = position;
-            positionButtons.forEach(btn => {
-                if (btn.dataset.position === position) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            calculate();
-        }
+        // State
+        let currentPosition = 'long';
+        let currentTradeType = 'equity';
 
         // Theme Management
         function toggleTheme() {
@@ -507,29 +556,22 @@
         }
 
         function updateThemeButton(theme) {
-            const themeIcon = document.getElementById('themeIcon');
-            const themeText = document.getElementById('themeText');
-            
             if (theme === 'dark') {
-                themeIcon.textContent = '☀️';
-                themeText.textContent = 'Light';
+                elements.themeIcon.textContent = '☀️';
+                elements.themeText.textContent = 'Light';
             } else {
-                themeIcon.textContent = '🌙';
-                themeText.textContent = 'Dark';
+                elements.themeIcon.textContent = '🌙';
+                elements.themeText.textContent = 'Dark';
             }
         }
 
-        // Load saved theme
         function loadTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeButton(savedTheme);
         }
 
-        // Initialize theme on page load
-        loadTheme();
-
-        // Format number to Indian format
+        // Number Formatting
         function formatIndianNumber(num) {
             if (!num || isNaN(num)) return '';
             
@@ -552,21 +594,16 @@
             return formatted;
         }
 
-        // Parse Indian formatted number to float
         function parseIndianNumber(str) {
             if (!str) return 0;
             return parseFloat(str.replace(/,/g, ''));
         }
 
-        // Handle input formatting
         function handleInputFormat(input) {
             input.addEventListener('input', (e) => {
                 let value = e.target.value.replace(/,/g, '');
-                
-                // Allow only numbers and one decimal point
                 value = value.replace(/[^\d.]/g, '');
                 
-                // Prevent multiple decimal points
                 const parts = value.split('.');
                 if (parts.length > 2) {
                     value = parts[0] + '.' + parts.slice(1).join('');
@@ -586,7 +623,6 @@
                     e.target.value = '';
                 }
                 
-                // Adjust cursor position
                 const newLength = e.target.value.length;
                 const newPosition = cursorPosition + (newLength - oldLength);
                 e.target.setSelectionRange(newPosition, newPosition);
@@ -595,25 +631,44 @@
             });
         }
 
-        // Apply formatting to all price inputs
-        handleInputFormat(inputs.capital);
-        handleInputFormat(inputs.entryPrice);
-        handleInputFormat(inputs.stopLoss);
-        handleInputFormat(inputs.targetPrice);
-        handleInputFormat(inputs.riskPercent);
+        // Position Toggle
+        function setPosition(position) {
+            currentPosition = position;
+            if (position === 'long') {
+                elements.longBtn.classList.add('active');
+                elements.shortBtn.classList.remove('active');
+            } else {
+                elements.shortBtn.classList.add('active');
+                elements.longBtn.classList.remove('active');
+            }
+            calculate();
+        }
 
-        // Risk button handlers
-        riskButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const risk = btn.dataset.risk;
-                inputs.riskPercent.value = risk;
-                updateActiveButton(risk);
-                calculate();
+        // Trade Type Toggle
+        function setTradeType(type) {
+            currentTradeType = type;
+            if (type === 'fno') {
+                elements.fnoLotSizeGroup.classList.remove('hidden');
+            } else {
+                elements.fnoLotSizeGroup.classList.add('hidden');
+            }
+            calculate();
+        }
+
+        // Risk Button Handler
+        function setRiskPercent(risk) {
+            elements.riskPercent.value = risk;
+            riskButtons.forEach(btn => {
+                if (btn.dataset.risk === risk) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             });
-        });
+            calculate();
+        }
 
-        // Update active button state
-        function updateActiveButton(risk) {
+        function updateActiveRiskButton(risk) {
             riskButtons.forEach(btn => {
                 if (btn.dataset.risk === risk) {
                     btn.classList.add('active');
@@ -623,51 +678,60 @@
             });
         }
 
-        // Monitor risk percent for button state
-        inputs.riskPercent.addEventListener('input', () => {
-            updateActiveButton(inputs.riskPercent.value);
-        });
-
+        // Calculate
         function calculate() {
-            const capital = parseIndianNumber(inputs.capital.value) || 0;
-            const riskPercent = parseIndianNumber(inputs.riskPercent.value) || 0;
-            const entryPrice = parseIndianNumber(inputs.entryPrice.value) || 0;
-            const stopLoss = parseIndianNumber(inputs.stopLoss.value) || 0;
-            const targetPrice = parseIndianNumber(inputs.targetPrice.value) || 0;
+            const capital = parseIndianNumber(elements.capital.value) || 0;
+            const riskPercent = parseIndianNumber(elements.riskPercent.value) || 0;
+            const entryPrice = parseIndianNumber(elements.entryPrice.value) || 0;
+            const stopLoss = parseIndianNumber(elements.stopLoss.value) || 0;
+            const targetPrice = parseIndianNumber(elements.targetPrice.value) || 0;
+            const fnoLotSize = parseIndianNumber(elements.fnoLotSize.value) || 0;
 
-            // Calculate max loss (risk amount)
+            // Calculate max loss
             const maxLossAmount = (capital * riskPercent) / 100;
-            outputs.maxLoss.textContent = '₹' + formatIndianNumber(Math.round(maxLossAmount));
+            elements.maxLoss.textContent = '₹' + formatIndianNumber(Math.round(maxLossAmount));
 
-            // Calculate risk per share based on position type
+            // Calculate risk per share
             let riskPerShare;
             if (currentPosition === 'long') {
                 riskPerShare = entryPrice - stopLoss;
             } else {
-                // Short position: stop loss is above entry
                 riskPerShare = stopLoss - entryPrice;
             }
 
             // Calculate lot size
             let lotSize = 0;
-            if (riskPerShare > 0 && maxLossAmount > 0) {
-                lotSize = Math.floor(maxLossAmount / riskPerShare);
+            let totalQuantity = 0;
+            
+            if (currentTradeType === 'equity') {
+                if (riskPerShare > 0 && maxLossAmount > 0) {
+                    lotSize = Math.floor(maxLossAmount / riskPerShare);
+                }
+                totalQuantity = lotSize;
+                elements.lotSize.textContent = formatIndianNumber(lotSize);
+                elements.lotSizeSubtext.textContent = 'shares';
+            } else {
+                if (riskPerShare > 0 && maxLossAmount > 0 && fnoLotSize > 0) {
+                    const riskPerLot = riskPerShare * fnoLotSize;
+                    lotSize = Math.floor(maxLossAmount / riskPerLot);
+                    totalQuantity = lotSize * fnoLotSize;
+                }
+                elements.lotSize.textContent = formatIndianNumber(lotSize);
+                elements.lotSizeSubtext.textContent = `lots (${formatIndianNumber(totalQuantity)} shares)`;
             }
-            outputs.lotSize.textContent = formatIndianNumber(lotSize);
 
-            // Calculate profit on target based on position type
+            // Calculate profit on target
             let profitOnTarget = 0;
             if (currentPosition === 'long') {
-                if (targetPrice > entryPrice && lotSize > 0) {
-                    profitOnTarget = (targetPrice - entryPrice) * lotSize;
+                if (targetPrice > entryPrice && totalQuantity > 0) {
+                    profitOnTarget = (targetPrice - entryPrice) * totalQuantity;
                 }
             } else {
-                // Short position: profit when target is below entry
-                if (entryPrice > targetPrice && lotSize > 0) {
-                    profitOnTarget = (entryPrice - targetPrice) * lotSize;
+                if (entryPrice > targetPrice && totalQuantity > 0) {
+                    profitOnTarget = (entryPrice - targetPrice) * totalQuantity;
                 }
             }
-            outputs.profitOnTarget.textContent = '₹' + formatIndianNumber(Math.round(profitOnTarget));
+            elements.profitOnTarget.textContent = '₹' + formatIndianNumber(Math.round(profitOnTarget));
 
             // Calculate Risk:Reward Ratio
             let riskRewardRatio = '1:0';
@@ -683,21 +747,61 @@
                     riskRewardRatio = '1:' + ratio.toFixed(2);
                 }
             }
-            outputs.riskReward.textContent = riskRewardRatio;
+            elements.riskReward.textContent = riskRewardRatio;
         }
 
+        // Reset
         function resetCalculator() {
-            Object.values(inputs).forEach(input => {
-                input.value = '';
-            });
+            elements.capital.value = '';
+            elements.riskPercent.value = '';
+            elements.entryPrice.value = '';
+            elements.stopLoss.value = '';
+            elements.targetPrice.value = '';
+            elements.fnoLotSize.value = '';
+            
+            elements.equityRadio.checked = true;
+            elements.fnoLotSizeGroup.classList.add('hidden');
+            currentTradeType = 'equity';
+            
+            elements.longBtn.classList.add('active');
+            elements.shortBtn.classList.remove('active');
+            currentPosition = 'long';
+            
             riskButtons.forEach(btn => btn.classList.remove('active'));
-            outputs.lotSize.textContent = '0';
-            outputs.profitOnTarget.textContent = '₹0';
-            outputs.maxLoss.textContent = '₹0';
-            outputs.riskReward.textContent = '1:0';
+            
+            elements.lotSize.textContent = '0';
+            elements.lotSizeSubtext.textContent = 'shares';
+            elements.profitOnTarget.textContent = '₹0';
+            elements.maxLoss.textContent = '₹0';
+            elements.riskReward.textContent = '1:0';
         }
 
-        // Initial calculation
+        // Event Listeners
+        elements.themeToggle.addEventListener('click', toggleTheme);
+        elements.longBtn.addEventListener('click', () => setPosition('long'));
+        elements.shortBtn.addEventListener('click', () => setPosition('short'));
+        elements.equityRadio.addEventListener('change', () => setTradeType('equity'));
+        elements.fnoRadio.addEventListener('change', () => setTradeType('fno'));
+        elements.resetBtn.addEventListener('click', resetCalculator);
+
+        riskButtons.forEach(btn => {
+            btn.addEventListener('click', () => setRiskPercent(btn.dataset.risk));
+        });
+
+        elements.riskPercent.addEventListener('input', () => {
+            updateActiveRiskButton(elements.riskPercent.value);
+        });
+
+        // Apply input formatting
+        handleInputFormat(elements.capital);
+        handleInputFormat(elements.riskPercent);
+        handleInputFormat(elements.entryPrice);
+        handleInputFormat(elements.stopLoss);
+        handleInputFormat(elements.targetPrice);
+        handleInputFormat(elements.fnoLotSize);
+
+        // Initialize
+        loadTheme();
         calculate();
     </script>
 </body>
