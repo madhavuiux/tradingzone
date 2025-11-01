@@ -1,808 +1,954 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading Position Size Calculator</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #ffffff;
-            --text-primary: #000000;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --border-strong: #000000;
-            --input-bg: #ffffff;
-            --hover-bg: #f3f4f6;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --border-strong: #000000;
+        --input-bg: #ffffff;
+        --hover-bg: #f3f4f6;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
 
-        [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --border-strong: #f1f5f9;
-            --input-bg: #1e293b;
-            --hover-bg: #334155;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
+      [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --border-strong: #f1f5f9;
+        --input-bg: #1e293b;
+        --hover-bg: #334155;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
 
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-strong);
+        border-radius: 50px;
+        padding: 8px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        box-shadow: var(--shadow);
+        color: var(--text-primary);
+      }
+
+      .theme-toggle:hover {
+        background: var(--hover-bg);
+      }
+
+      .theme-icon {
+        font-size: 18px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+        flex: 1;
+        padding-top: 20px;
+      }
+
+      .card {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+      }
+
+      h1 {
+        color: var(--text-primary);
+        font-size: 28px;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 14px;
+      }
+
+      .position-toggle {
+        display: flex;
+        gap: 0;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-strong);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+
+      .position-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .position-btn:hover {
+        background: var(--hover-bg);
+      }
+
+      .position-btn.active {
+        background: var(--text-primary);
+        color: var(--bg-primary);
+      }
+
+      .trade-type-group {
+        margin-bottom: 24px;
+      }
+
+      .trade-type-label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 24px;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .radio-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--text-primary);
+      }
+
+      .radio-option label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .input-group {
+        margin-bottom: 24px;
+        position: relative;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      .currency-symbol {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 16px;
+        pointer-events: none;
+      }
+
+      /* NEW: Style for percentage display */
+      .input-percent-display {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 14px;
+        pointer-events: none;
+      }
+
+      .input-percent-display.profit {
+        color: #10b981;
+      }
+
+      .input-percent-display.loss {
+        color: #ef4444;
+      }
+      /* END NEW */
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+      }
+
+      input.has-currency {
+        padding-left: 36px;
+      }
+
+      /* NEW: Padding for inputs with percentage */
+      input.has-percent {
+        padding-right: 85px; /* Adjust as needed */
+      }
+      /* END NEW */
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--border-strong);
+      }
+
+      input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+      }
+
+      .risk-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .risk-btn {
+        padding: 10px;
+        border: 2px solid var(--border-strong);
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: all 0.3s;
+        font-size: 14px;
+      }
+
+      .risk-btn:hover {
+        background: var(--hover-bg);
+      }
+
+      .risk-btn.active {
+        background: var(--text-primary);
+        color: var(--bg-primary);
+        border-color: var(--text-primary);
+      }
+
+      .results {
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-strong);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 32px;
+        transition: all 0.3s ease;
+      }
+
+      .result-item {
+        margin-bottom: 20px;
+      }
+
+      .result-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .result-label {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .result-value {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .result-value.profit {
+        color: #10b981;
+      }
+
+      .result-value.loss {
+        color: #ef4444;
+      }
+
+      .result-value.neutral {
+        color: var(--text-primary);
+      }
+
+      .result-subtext {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .reset-btn {
+        width: 100%;
+        padding: 14px;
+        background: transparent;
+        color: var(--text-primary);
+        border: 2px solid var(--border-strong);
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 24px;
+      }
+
+      .reset-btn:hover {
+        background: var(--hover-bg);
+      }
+
+      .reset-btn:active {
+        transform: scale(0.98);
+      }
+
+      footer {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .linkedin-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.3s;
+      }
+
+      .linkedin-link:hover {
+        color: #0077b5;
+        transform: translateY(-2px);
+      }
+
+      .linkedin-icon {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 24px 0;
+      }
+
+      @media (max-width: 640px) {
         .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-strong);
-            border-radius: 50px;
-            padding: 8px 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            box-shadow: var(--shadow);
-            color: var(--text-primary);
-        }
-
-        .theme-toggle:hover {
-            background: var(--hover-bg);
+          top: 10px;
+          right: 10px;
+          padding: 6px 12px;
+          font-size: 12px;
         }
 
         .theme-icon {
-            font-size: 18px;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-            flex: 1;
-            padding-top: 20px;
+          font-size: 16px;
         }
 
         .card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
+          padding: 24px 20px;
         }
 
         h1 {
-            color: var(--text-primary);
-            font-size: 28px;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            text-align: center;
-            margin-bottom: 32px;
-            font-size: 14px;
-        }
-
-        .position-toggle {
-            display: flex;
-            gap: 0;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-strong);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .position-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .position-btn:hover {
-            background: var(--hover-bg);
-        }
-
-        .position-btn.active {
-            background: var(--text-primary);
-            color: var(--bg-primary);
-        }
-
-        .trade-type-group {
-            margin-bottom: 24px;
-        }
-
-        .trade-type-label {
-            display: block;
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 24px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        .radio-option input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--text-primary);
-        }
-
-        .radio-option label {
-            margin: 0;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .input-group {
-            margin-bottom: 24px;
-            position: relative;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        label {
-            display: block;
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .currency-symbol {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 16px;
-            pointer-events: none;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background: var(--input-bg);
-            color: var(--text-primary);
-        }
-
-        input.has-currency {
-            padding-left: 36px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--border-strong);
-        }
-
-        input::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.6;
-        }
-
-        .risk-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .risk-btn {
-            padding: 10px;
-            border: 2px solid var(--border-strong);
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-primary);
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-
-        .risk-btn:hover {
-            background: var(--hover-bg);
-        }
-
-        .risk-btn.active {
-            background: var(--text-primary);
-            color: var(--bg-primary);
-            border-color: var(--text-primary);
-        }
-
-        .results {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-strong);
-            border-radius: 12px;
-            padding: 24px;
-            margin-top: 32px;
-            transition: all 0.3s ease;
-        }
-
-        .result-item {
-            margin-bottom: 20px;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+          font-size: 24px;
         }
 
         .result-value {
-            font-size: 28px;
-            font-weight: 700;
+          font-size: 24px;
         }
 
-        .result-value.profit {
-            color: #10b981;
+        .risk-buttons {
+          grid-template-columns: repeat(2, 1fr);
         }
-
-        .result-value.loss {
-            color: #ef4444;
-        }
-
-        .result-value.neutral {
-            color: var(--text-primary);
-        }
-
-        .result-subtext {
-            color: var(--text-secondary);
-            font-size: 12px;
-            margin-top: 2px;
-        }
-
-        .reset-btn {
-            width: 100%;
-            padding: 14px;
-            background: transparent;
-            color: var(--text-primary);
-            border: 2px solid var(--border-strong);
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 24px;
-        }
-
-        .reset-btn:hover {
-            background: var(--hover-bg);
-        }
-
-        .reset-btn:active {
-            transform: scale(0.98);
-        }
-
-        footer {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .linkedin-link {
-            display: inline-flex;
-            align-items: center;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .linkedin-link:hover {
-            color: #0077b5;
-            transform: translateY(-2px);
-        }
-
-        .linkedin-icon {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        .divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 24px 0;
-        }
-
-        @media (max-width: 640px) {
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-
-            .theme-icon {
-                font-size: 16px;
-            }
-
-            .card {
-                padding: 24px 20px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .result-value {
-                font-size: 24px;
-            }
-
-            .risk-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <button class="theme-toggle" id="themeToggle">
-        <span class="theme-icon" id="themeIcon">🌙</span>
-        <span id="themeText">Dark</span>
+      <span class="theme-icon" id="themeIcon">🌙</span>
+      <span id="themeText">Dark</span>
     </button>
 
     <div class="container">
-        <div class="card">
-            <h1>📊 Position Size Calculator</h1>
-            <p class="subtitle">Calculate your optimal lot size and risk</p>
+      <div class="card">
+        <h1>📊 Position Size Calculator</h1>
+        <p class="subtitle">Calculate your optimal lot size and risk</p>
 
-            <div class="position-toggle">
-                <button class="position-btn active" id="longBtn">Long Position</button>
-                <button class="position-btn" id="shortBtn">Short Position</button>
-            </div>
-
-            <div class="trade-type-group">
-                <span class="trade-type-label">Trade Type</span>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="equityRadio" name="tradeType" value="equity" checked>
-                        <label for="equityRadio">Equity</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="fnoRadio" name="tradeType" value="fno">
-                        <label for="fnoRadio">F&O</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group hidden" id="fnoLotSizeGroup">
-                <label for="fnoLotSize">Lot Size (Quantity per Lot)</label>
-                <input type="text" id="fnoLotSize" placeholder="e.g., 75 for Nifty 50" inputmode="numeric">
-            </div>
-
-            <div class="input-group">
-                <label for="capital">Your Capital</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">₹</span>
-                    <input type="text" id="capital" class="has-currency" placeholder="0" inputmode="numeric">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="riskPercent">Risk Appetite (%)</label>
-                <input type="text" id="riskPercent" placeholder="Enter risk %" inputmode="decimal">
-                <div class="risk-buttons">
-                    <button class="risk-btn" data-risk="1">1%</button>
-                    <button class="risk-btn" data-risk="2">2%</button>
-                    <button class="risk-btn" data-risk="2.5">2.5%</button>
-                    <button class="risk-btn" data-risk="3">3%</button>
-                </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="input-group">
-                <label for="entryPrice">Entry Price</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">₹</span>
-                    <input type="text" id="entryPrice" class="has-currency" placeholder="0" inputmode="decimal">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="stopLoss">Stop Loss Price</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">₹</span>
-                    <input type="text" id="stopLoss" class="has-currency" placeholder="0" inputmode="decimal">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="targetPrice">Target Price</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">₹</span>
-                    <input type="text" id="targetPrice" class="has-currency" placeholder="0" inputmode="decimal">
-                </div>
-            </div>
-
-            <div class="results">
-                <div class="result-item">
-                    <div class="result-label" id="lotSizeLabel">Lot Size You Can Buy</div>
-                    <div class="result-value neutral" id="lotSize">0</div>
-                    <div class="result-subtext" id="lotSizeSubtext">shares</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Profit On Target</div>
-                    <div class="result-value profit" id="profitOnTarget">₹0</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Max Loss</div>
-                    <div class="result-value loss" id="maxLoss">₹0</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Risk:Reward Ratio</div>
-                    <div class="result-value neutral" id="riskReward">1:0</div>
-                </div>
-            </div>
-
-            <button class="reset-btn" id="resetBtn">Reset All</button>
+        <div class="position-toggle">
+          <button class="position-btn active" id="longBtn">
+            Long Position
+          </button>
+          <button class="position-btn" id="shortBtn">Short Position</button>
         </div>
+
+        <div class="trade-type-group">
+          <span class="trade-type-label">Trade Type</span>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input
+                type="radio"
+                id="equityRadio"
+                name="tradeType"
+                value="equity"
+                checked
+              />
+              <label for="equityRadio">Equity</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="fnoRadio" name="tradeType" value="fno" />
+              <label for="fnoRadio">F&O</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group hidden" id="fnoLotSizeGroup">
+          <label for="fnoLotSize">Lot Size (Quantity per Lot)</label>
+          <input
+            type="text"
+            id="fnoLotSize"
+            placeholder="e.g., 75 for Nifty 50"
+            inputmode="numeric"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="capital">Your Capital</label>
+          <div class="input-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input
+              type="text"
+              id="capital"
+              class="has-currency"
+              placeholder="0"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="riskPercent">Risk Appetite (%)</label>
+          <input
+            type="text"
+            id="riskPercent"
+            placeholder="Enter risk %"
+            inputmode="decimal"
+          />
+          <div class="risk-buttons">
+            <button class="risk-btn" data-risk="1">1%</button>
+            <button class="risk-btn" data-risk="2">2%</button>
+            <button class="risk-btn" data-risk="2.5">2.5%</button>
+            <button class="risk-btn" data-risk="3">3%</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="input-group">
+          <label for="entryPrice">Entry Price</label>
+          <div class="input-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input
+              type="text"
+              id="entryPrice"
+              class="has-currency"
+              placeholder="0"
+              inputmode="decimal"
+            />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="stopLoss">Stop Loss Price</label>
+          <div class="input-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input
+              type="text"
+              id="stopLoss"
+              class="has-currency has-percent"
+              placeholder="0"
+              inputmode="decimal"
+            />
+            <span class="input-percent-display" id="stopLossPercent"></span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="targetPrice">Target Price</label>
+          <div class="input-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input
+              type="text"
+              id="targetPrice"
+              class="has-currency has-percent"
+              placeholder="0"
+              inputmode="decimal"
+            />
+            <span class="input-percent-display" id="targetPricePercent"></span>
+          </div>
+        </div>
+
+        <div class="results">
+          <div class="result-item">
+            <div class="result-label" id="lotSizeLabel">
+              Lot Size You Can Buy
+            </div>
+            <div class="result-value neutral" id="lotSize">0</div>
+            <div class="result-subtext" id="lotSizeSubtext">shares</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Profit On Target</div>
+            <div class="result-value profit" id="profitOnTarget">₹0</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Max Loss</div>
+            <div class="result-value loss" id="maxLoss">₹0</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Risk:Reward Ratio</div>
+            <div class="result-value neutral" id="riskReward">1:0</div>
+          </div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset All</button>
+      </div>
     </div>
 
     <footer>
-        <span>Made by Madhav Sajikumar</span>
-        <a href="https://www.linkedin.com/in/madhavsajikumar/" target="_blank" rel="noopener noreferrer" class="linkedin-link" aria-label="LinkedIn Profile">
-            <svg class="linkedin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="pointer-events: none;">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-            </svg>
-        </a>
+      <span>Made by Madhav Sajikumar</span>
+      <a
+        href="https://www.linkedin.com/in/madhavsajikumar/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="linkedin-link"
+        aria-label="LinkedIn Profile"
+      >
+        <svg
+          class="linkedin-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          style="pointer-events: none"
+        >
+          <path
+            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+          />
+        </svg>
+      </a>
     </footer>
 
     <script>
-        // Get all DOM elements
-        const elements = {
-            capital: document.getElementById('capital'),
-            riskPercent: document.getElementById('riskPercent'),
-            entryPrice: document.getElementById('entryPrice'),
-            stopLoss: document.getElementById('stopLoss'),
-            targetPrice: document.getElementById('targetPrice'),
-            fnoLotSize: document.getElementById('fnoLotSize'),
-            fnoLotSizeGroup: document.getElementById('fnoLotSizeGroup'),
-            equityRadio: document.getElementById('equityRadio'),
-            fnoRadio: document.getElementById('fnoRadio'),
-            longBtn: document.getElementById('longBtn'),
-            shortBtn: document.getElementById('shortBtn'),
-            lotSize: document.getElementById('lotSize'),
-            lotSizeLabel: document.getElementById('lotSizeLabel'),
-            lotSizeSubtext: document.getElementById('lotSizeSubtext'),
-            profitOnTarget: document.getElementById('profitOnTarget'),
-            maxLoss: document.getElementById('maxLoss'),
-            riskReward: document.getElementById('riskReward'),
-            resetBtn: document.getElementById('resetBtn'),
-            themeToggle: document.getElementById('themeToggle'),
-            themeIcon: document.getElementById('themeIcon'),
-            themeText: document.getElementById('themeText')
-        };
+      // Get all DOM elements
+      const elements = {
+        capital: document.getElementById("capital"),
+        riskPercent: document.getElementById("riskPercent"),
+        entryPrice: document.getElementById("entryPrice"),
+        stopLoss: document.getElementById("stopLoss"),
+        targetPrice: document.getElementById("targetPrice"),
+        // NEW: Added percentage display elements
+        stopLossPercent: document.getElementById("stopLossPercent"),
+        targetPricePercent: document.getElementById("targetPricePercent"),
+        // END NEW
+        fnoLotSize: document.getElementById("fnoLotSize"),
+        fnoLotSizeGroup: document.getElementById("fnoLotSizeGroup"),
+        equityRadio: document.getElementById("equityRadio"),
+        fnoRadio: document.getElementById("fnoRadio"),
+        longBtn: document.getElementById("longBtn"),
+        shortBtn: document.getElementById("shortBtn"),
+        lotSize: document.getElementById("lotSize"),
+        lotSizeLabel: document.getElementById("lotSizeLabel"),
+        lotSizeSubtext: document.getElementById("lotSizeSubtext"),
+        profitOnTarget: document.getElementById("profitOnTarget"),
+        maxLoss: document.getElementById("maxLoss"),
+        riskReward: document.getElementById("riskReward"),
+        resetBtn: document.getElementById("resetBtn"),
+        themeToggle: document.getElementById("themeToggle"),
+        themeIcon: document.getElementById("themeIcon"),
+        themeText: document.getElementById("themeText"),
+      };
 
-        const riskButtons = document.querySelectorAll('.risk-btn');
+      const riskButtons = document.querySelectorAll(".risk-btn");
 
-        // State
-        let currentPosition = 'long';
-        let currentTradeType = 'equity';
+      // State
+      let currentPosition = "long";
+      let currentTradeType = "equity";
 
-        // Theme Management
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeButton(newTheme);
+      // Theme Management
+      function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+        html.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeButton(newTheme);
+      }
+
+      function updateThemeButton(theme) {
+        if (theme === "dark") {
+          elements.themeIcon.textContent = "☀️";
+          elements.themeText.textContent = "Light";
+        } else {
+          elements.themeIcon.textContent = "🌙";
+          elements.themeText.textContent = "Dark";
+        }
+      }
+
+      function loadTheme() {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeButton(savedTheme);
+      }
+
+      // Number Formatting
+      function formatIndianNumber(num) {
+        if (!num || isNaN(num)) return "";
+
+        const numStr = num.toString();
+        const [integer, decimal] = numStr.split(".");
+
+        let lastThree = integer.substring(integer.length - 3);
+        let otherNumbers = integer.substring(0, integer.length - 3);
+
+        if (otherNumbers !== "") {
+          lastThree = "," + lastThree;
         }
 
-        function updateThemeButton(theme) {
-            if (theme === 'dark') {
-                elements.themeIcon.textContent = '☀️';
-                elements.themeText.textContent = 'Light';
-            } else {
-                elements.themeIcon.textContent = '🌙';
-                elements.themeText.textContent = 'Dark';
+        let formatted =
+          otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+
+        if (decimal) {
+          formatted += "." + decimal;
+        }
+
+        return formatted;
+      }
+
+      function parseIndianNumber(str) {
+        if (!str) return 0;
+        return parseFloat(str.replace(/,/g, ""));
+      }
+
+      function handleInputFormat(input) {
+        input.addEventListener("input", (e) => {
+          let value = e.target.value.replace(/,/g, "");
+          value = value.replace(/[^\d.]/g, "");
+
+          const parts = value.split(".");
+          if (parts.length > 2) {
+            value = parts[0] + "." + parts.slice(1).join("");
+          }
+
+          const cursorPosition = e.target.selectionStart;
+          const oldLength = e.target.value.length;
+
+          if (value) {
+            const [integer, decimal] = value.split(".");
+            let formatted = formatIndianNumber(integer);
+            if (decimal !== undefined) {
+              formatted += "." + decimal;
             }
-        }
+            e.target.value = formatted;
+          } else {
+            e.target.value = "";
+          }
 
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeButton(savedTheme);
-        }
+          const newLength = e.target.value.length;
+          const newPosition = cursorPosition + (newLength - oldLength);
+          e.target.setSelectionRange(newPosition, newPosition);
 
-        // Number Formatting
-        function formatIndianNumber(num) {
-            if (!num || isNaN(num)) return '';
-            
-            const numStr = num.toString();
-            const [integer, decimal] = numStr.split('.');
-            
-            let lastThree = integer.substring(integer.length - 3);
-            let otherNumbers = integer.substring(0, integer.length - 3);
-            
-            if (otherNumbers !== '') {
-                lastThree = ',' + lastThree;
-            }
-            
-            let formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
-            
-            if (decimal) {
-                formatted += '.' + decimal;
-            }
-            
-            return formatted;
-        }
-
-        function parseIndianNumber(str) {
-            if (!str) return 0;
-            return parseFloat(str.replace(/,/g, ''));
-        }
-
-        function handleInputFormat(input) {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/,/g, '');
-                value = value.replace(/[^\d.]/g, '');
-                
-                const parts = value.split('.');
-                if (parts.length > 2) {
-                    value = parts[0] + '.' + parts.slice(1).join('');
-                }
-                
-                const cursorPosition = e.target.selectionStart;
-                const oldLength = e.target.value.length;
-                
-                if (value) {
-                    const [integer, decimal] = value.split('.');
-                    let formatted = formatIndianNumber(integer);
-                    if (decimal !== undefined) {
-                        formatted += '.' + decimal;
-                    }
-                    e.target.value = formatted;
-                } else {
-                    e.target.value = '';
-                }
-                
-                const newLength = e.target.value.length;
-                const newPosition = cursorPosition + (newLength - oldLength);
-                e.target.setSelectionRange(newPosition, newPosition);
-                
-                calculate();
-            });
-        }
-
-        // Position Toggle
-        function setPosition(position) {
-            currentPosition = position;
-            if (position === 'long') {
-                elements.longBtn.classList.add('active');
-                elements.shortBtn.classList.remove('active');
-            } else {
-                elements.shortBtn.classList.add('active');
-                elements.longBtn.classList.remove('active');
-            }
-            calculate();
-        }
-
-        // Trade Type Toggle
-        function setTradeType(type) {
-            currentTradeType = type;
-            if (type === 'fno') {
-                elements.fnoLotSizeGroup.classList.remove('hidden');
-            } else {
-                elements.fnoLotSizeGroup.classList.add('hidden');
-            }
-            calculate();
-        }
-
-        // Risk Button Handler
-        function setRiskPercent(risk) {
-            elements.riskPercent.value = risk;
-            riskButtons.forEach(btn => {
-                if (btn.dataset.risk === risk) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            calculate();
-        }
-
-        function updateActiveRiskButton(risk) {
-            riskButtons.forEach(btn => {
-                if (btn.dataset.risk === risk) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        // Calculate
-        function calculate() {
-            const capital = parseIndianNumber(elements.capital.value) || 0;
-            const riskPercent = parseIndianNumber(elements.riskPercent.value) || 0;
-            const entryPrice = parseIndianNumber(elements.entryPrice.value) || 0;
-            const stopLoss = parseIndianNumber(elements.stopLoss.value) || 0;
-            const targetPrice = parseIndianNumber(elements.targetPrice.value) || 0;
-            const fnoLotSize = parseIndianNumber(elements.fnoLotSize.value) || 0;
-
-            // Calculate max loss
-            const maxLossAmount = (capital * riskPercent) / 100;
-            elements.maxLoss.textContent = '₹' + formatIndianNumber(Math.round(maxLossAmount));
-
-            // Calculate risk per share
-            let riskPerShare;
-            if (currentPosition === 'long') {
-                riskPerShare = entryPrice - stopLoss;
-            } else {
-                riskPerShare = stopLoss - entryPrice;
-            }
-
-            // Calculate lot size
-            let lotSize = 0;
-            let totalQuantity = 0;
-            
-            if (currentTradeType === 'equity') {
-                if (riskPerShare > 0 && maxLossAmount > 0) {
-                    lotSize = Math.floor(maxLossAmount / riskPerShare);
-                }
-                totalQuantity = lotSize;
-                elements.lotSize.textContent = formatIndianNumber(lotSize);
-                elements.lotSizeSubtext.textContent = 'shares';
-            } else {
-                if (riskPerShare > 0 && maxLossAmount > 0 && fnoLotSize > 0) {
-                    const riskPerLot = riskPerShare * fnoLotSize;
-                    lotSize = Math.floor(maxLossAmount / riskPerLot);
-                    totalQuantity = lotSize * fnoLotSize;
-                }
-                elements.lotSize.textContent = formatIndianNumber(lotSize);
-                elements.lotSizeSubtext.textContent = `lots (${formatIndianNumber(totalQuantity)} shares)`;
-            }
-
-            // Calculate profit on target
-            let profitOnTarget = 0;
-            if (currentPosition === 'long') {
-                if (targetPrice > entryPrice && totalQuantity > 0) {
-                    profitOnTarget = (targetPrice - entryPrice) * totalQuantity;
-                }
-            } else {
-                if (entryPrice > targetPrice && totalQuantity > 0) {
-                    profitOnTarget = (entryPrice - targetPrice) * totalQuantity;
-                }
-            }
-            elements.profitOnTarget.textContent = '₹' + formatIndianNumber(Math.round(profitOnTarget));
-
-            // Calculate Risk:Reward Ratio
-            let riskRewardRatio = '1:0';
-            if (riskPerShare > 0) {
-                let reward;
-                if (currentPosition === 'long') {
-                    reward = targetPrice - entryPrice;
-                } else {
-                    reward = entryPrice - targetPrice;
-                }
-                const ratio = reward / riskPerShare;
-                if (ratio > 0) {
-                    riskRewardRatio = '1:' + ratio.toFixed(2);
-                }
-            }
-            elements.riskReward.textContent = riskRewardRatio;
-        }
-
-        // Reset
-        function resetCalculator() {
-            elements.capital.value = '';
-            elements.riskPercent.value = '';
-            elements.entryPrice.value = '';
-            elements.stopLoss.value = '';
-            elements.targetPrice.value = '';
-            elements.fnoLotSize.value = '';
-            
-            elements.equityRadio.checked = true;
-            elements.fnoLotSizeGroup.classList.add('hidden');
-            currentTradeType = 'equity';
-            
-            elements.longBtn.classList.add('active');
-            elements.shortBtn.classList.remove('active');
-            currentPosition = 'long';
-            
-            riskButtons.forEach(btn => btn.classList.remove('active'));
-            
-            elements.lotSize.textContent = '0';
-            elements.lotSizeSubtext.textContent = 'shares';
-            elements.profitOnTarget.textContent = '₹0';
-            elements.maxLoss.textContent = '₹0';
-            elements.riskReward.textContent = '1:0';
-        }
-
-        // Event Listeners
-        elements.themeToggle.addEventListener('click', toggleTheme);
-        elements.longBtn.addEventListener('click', () => setPosition('long'));
-        elements.shortBtn.addEventListener('click', () => setPosition('short'));
-        elements.equityRadio.addEventListener('change', () => setTradeType('equity'));
-        elements.fnoRadio.addEventListener('change', () => setTradeType('fno'));
-        elements.resetBtn.addEventListener('click', resetCalculator);
-
-        riskButtons.forEach(btn => {
-            btn.addEventListener('click', () => setRiskPercent(btn.dataset.risk));
+          calculate();
         });
+      }
 
-        elements.riskPercent.addEventListener('input', () => {
-            updateActiveRiskButton(elements.riskPercent.value);
-        });
-
-        // Apply input formatting
-        handleInputFormat(elements.capital);
-        handleInputFormat(elements.riskPercent);
-        handleInputFormat(elements.entryPrice);
-        handleInputFormat(elements.stopLoss);
-        handleInputFormat(elements.targetPrice);
-        handleInputFormat(elements.fnoLotSize);
-
-        // Initialize
-        loadTheme();
+      // Position Toggle
+      function setPosition(position) {
+        currentPosition = position;
+        if (position === "long") {
+          elements.longBtn.classList.add("active");
+          elements.shortBtn.classList.remove("active");
+        } else {
+          elements.shortBtn.classList.add("active");
+          elements.longBtn.classList.remove("active");
+        }
         calculate();
+      }
+
+      // Trade Type Toggle
+      function setTradeType(type) {
+        currentTradeType = type;
+        if (type === "fno") {
+          elements.fnoLotSizeGroup.classList.remove("hidden");
+        } else {
+          elements.fnoLotSizeGroup.classList.add("hidden");
+        }
+        calculate();
+      }
+
+      // Risk Button Handler
+      function setRiskPercent(risk) {
+        elements.riskPercent.value = risk;
+        riskButtons.forEach((btn) => {
+          if (btn.dataset.risk === risk) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+        calculate();
+      }
+
+      function updateActiveRiskButton(risk) {
+        riskButtons.forEach((btn) => {
+          if (btn.dataset.risk === risk) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+
+      // Calculate
+      function calculate() {
+        const capital = parseIndianNumber(elements.capital.value) || 0;
+        const riskPercent = parseIndianNumber(elements.riskPercent.value) || 0;
+        const entryPrice = parseIndianNumber(elements.entryPrice.value) || 0;
+        const stopLoss = parseIndianNumber(elements.stopLoss.value) || 0;
+        const targetPrice = parseIndianNumber(elements.targetPrice.value) || 0;
+        const fnoLotSize = parseIndianNumber(elements.fnoLotSize.value) || 0;
+
+        // --- NEW: Percentage Display Logic ---
+        if (entryPrice > 0) {
+          // Stop Loss Percentage
+          if (stopLoss > 0) {
+            const slPercent = ((stopLoss - entryPrice) / entryPrice) * 100;
+            elements.stopLossPercent.textContent = `${slPercent.toFixed(2)}%`;
+            elements.stopLossPercent.className = "input-percent-display"; // Reset classes
+            if (slPercent > 0) {
+              elements.stopLossPercent.classList.add("profit");
+            } else if (slPercent < 0) {
+              elements.stopLossPercent.classList.add("loss");
+            }
+          } else {
+            elements.stopLossPercent.textContent = "";
+            elements.stopLossPercent.className = "input-percent-display";
+          }
+
+          // Target Price Percentage
+          if (targetPrice > 0) {
+            const tpPercent = ((targetPrice - entryPrice) / entryPrice) * 100;
+            elements.targetPricePercent.textContent = `${
+              tpPercent > 0 ? "+" : ""
+            }${tpPercent.toFixed(2)}%`;
+            elements.targetPricePercent.className = "input-percent-display"; // Reset classes
+            if (tpPercent > 0) {
+              elements.targetPricePercent.classList.add("profit");
+            } else if (tpPercent < 0) {
+              elements.targetPricePercent.classList.add("loss");
+            }
+          } else {
+            elements.targetPricePercent.textContent = "";
+            elements.targetPricePercent.className = "input-percent-display";
+          }
+        } else {
+          // Clear percentages if no entry price
+          elements.stopLossPercent.textContent = "";
+          elements.stopLossPercent.className = "input-percent-display";
+          elements.targetPricePercent.textContent = "";
+          elements.targetPricePercent.className = "input-percent-display";
+        }
+        // --- END NEW ---
+
+        // Calculate max loss
+        const maxLossAmount = (capital * riskPercent) / 100;
+        elements.maxLoss.textContent =
+          "₹" + formatIndianNumber(Math.round(maxLossAmount));
+
+        // Calculate risk per share
+        let riskPerShare;
+        if (currentPosition === "long") {
+          riskPerShare = entryPrice - stopLoss;
+        } else {
+          riskPerShare = stopLoss - entryPrice;
+        }
+
+        // Calculate lot size
+        let lotSize = 0;
+        let totalQuantity = 0;
+
+        if (currentTradeType === "equity") {
+          if (riskPerShare > 0 && maxLossAmount > 0) {
+            lotSize = Math.floor(maxLossAmount / riskPerShare);
+          }
+          totalQuantity = lotSize;
+          elements.lotSize.textContent = formatIndianNumber(lotSize);
+          elements.lotSizeSubtext.textContent = "shares";
+        } else {
+          if (riskPerShare > 0 && maxLossAmount > 0 && fnoLotSize > 0) {
+            const riskPerLot = riskPerShare * fnoLotSize;
+            lotSize = Math.floor(maxLossAmount / riskPerLot);
+            totalQuantity = lotSize * fnoLotSize;
+          }
+          elements.lotSize.textContent = formatIndianNumber(lotSize);
+          elements.lotSizeSubtext.textContent = `lots (${formatIndianNumber(
+            totalQuantity
+          )} shares)`;
+        }
+
+        // Calculate profit on target
+        let profitOnTarget = 0;
+        if (currentPosition === "long") {
+          if (targetPrice > entryPrice && totalQuantity > 0) {
+            profitOnTarget = (targetPrice - entryPrice) * totalQuantity;
+          }
+        } else {
+          if (entryPrice > targetPrice && totalQuantity > 0) {
+            profitOnTarget = (entryPrice - targetPrice) * totalQuantity;
+          }
+        }
+        elements.profitOnTarget.textContent =
+          "₹" + formatIndianNumber(Math.round(profitOnTarget));
+
+        // Calculate Risk:Reward Ratio
+        let riskRewardRatio = "1:0";
+        if (riskPerShare > 0) {
+          let reward;
+          if (currentPosition === "long") {
+            reward = targetPrice - entryPrice;
+          } else {
+            reward = entryPrice - targetPrice;
+          }
+          const ratio = reward / riskPerShare;
+          if (ratio > 0) {
+            riskRewardRatio = "1:" + ratio.toFixed(2);
+          }
+        }
+        elements.riskReward.textContent = riskRewardRatio;
+      }
+
+      // Reset
+      function resetCalculator() {
+        elements.capital.value = "";
+        elements.riskPercent.value = "";
+        elements.entryPrice.value = "";
+        elements.stopLoss.value = "";
+        elements.targetPrice.value = "";
+        elements.fnoLotSize.value = "";
+
+        // NEW: Clear percentage displays
+        elements.stopLossPercent.textContent = "";
+        elements.stopLossPercent.className = "input-percent-display";
+        elements.targetPricePercent.textContent = "";
+        elements.targetPricePercent.className = "input-percent-display";
+        // END NEW
+
+        elements.equityRadio.checked = true;
+        elements.fnoLotSizeGroup.classList.add("hidden");
+        currentTradeType = "equity";
+
+        elements.longBtn.classList.add("active");
+        elements.shortBtn.classList.remove("active");
+        currentPosition = "long";
+
+        riskButtons.forEach((btn) => btn.classList.remove("active"));
+
+        elements.lotSize.textContent = "0";
+        elements.lotSizeSubtext.textContent = "shares";
+        elements.profitOnTarget.textContent = "₹0";
+        elements.maxLoss.textContent = "₹0";
+        elements.riskReward.textContent = "1:0";
+      }
+
+      // Event Listeners
+      elements.themeToggle.addEventListener("click", toggleTheme);
+      elements.longBtn.addEventListener("click", () => setPosition("long"));
+      elements.shortBtn.addEventListener("click", () => setPosition("short"));
+      elements.equityRadio.addEventListener("change", () =>
+        setTradeType("equity")
+      );
+      elements.fnoRadio.addEventListener("change", () => setTradeType("fno"));
+      elements.resetBtn.addEventListener("click", resetCalculator);
+
+      riskButtons.forEach((btn) => {
+        btn.addEventListener("click", () => setRiskPercent(btn.dataset.risk));
+      });
+
+      elements.riskPercent.addEventListener("input", () => {
+        updateActiveRiskButton(elements.riskPercent.value);
+      });
+
+      // Apply input formatting
+      handleInputFormat(elements.capital);
+      handleInputFormat(elements.riskPercent);
+      handleInputFormat(elements.entryPrice);
+      handleInputFormat(elements.stopLoss);
+      handleInputFormat(elements.targetPrice);
+      handleInputFormat(elements.fnoLotSize);
+
+      // Initialize
+      loadTheme();
+      calculate();
     </script>
-</body>
+  </body>
 </html>
