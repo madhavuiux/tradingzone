@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Position Size Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --border-strong: #000000;
+            --input-bg: #ffffff;
+            --hover-bg: #f3f4f6;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --border-strong: #f1f5f9;
+            --input-bg: #1e293b;
+            --hover-bg: #334155;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-strong);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--hover-bg);
+        }
+
+        .theme-icon {
+            font-size: 18px;
+        }
+
+        .position-toggle {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-strong);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .position-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .position-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .position-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            padding-top: 20px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        input.has-currency {
+            padding-left: 36px;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--border-strong);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .risk-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .risk-btn {
+            padding: 10px;
+            border: 2px solid var(--border-strong);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .risk-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .risk-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            border-color: var(--text-primary);
+        }
+
+        .results {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .result-item {
+            margin-bottom: 20px;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .result-value.profit {
+            color: #10b981;
+        }
+
+        .result-value.loss {
+            color: #ef4444;
+        }
+
+        .result-value.neutral {
+            color: var(--text-primary);
+        }
+
+        .result-subtext {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-strong);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 24px;
+        }
+
+        .reset-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.98);
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 24px 0;
+        }
+
+        @media (max-width: 640px) {
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .theme-icon {
+                font-size: 16px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .result-value {
+                font-size: 24px;
+            }
+
+            .risk-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeText">Dark</span>
+    </button>
+
+    <div class="container">
+        <div class="card">
+            <h1>📊 Position Size Calculator</h1>
+            <p class="subtitle">Calculate your optimal lot size and risk</p>
+
+            <div class="position-toggle">
+                <button class="position-btn active" data-position="long" onclick="setPosition('long')">Long Position</button>
+                <button class="position-btn" data-position="short" onclick="setPosition('short')">Short Position</button>
+            </div>
+
+            <div class="input-group">
+                <label for="capital">Your Capital</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">₹</span>
+                    <input type="text" id="capital" class="has-currency" placeholder="0" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="riskPercent">Risk Appetite (%)</label>
+                <input type="text" id="riskPercent" placeholder="Enter risk %" inputmode="decimal">
+                <div class="risk-buttons">
+                    <button class="risk-btn" data-risk="1">1%</button>
+                    <button class="risk-btn" data-risk="2">2%</button>
+                    <button class="risk-btn" data-risk="2.5">2.5%</button>
+                    <button class="risk-btn" data-risk="3">3%</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="input-group">
+                <label for="entryPrice">Entry Price</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">₹</span>
+                    <input type="text" id="entryPrice" class="has-currency" placeholder="0" inputmode="decimal">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="stopLoss">Stop Loss Price</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">₹</span>
+                    <input type="text" id="stopLoss" class="has-currency" placeholder="0" inputmode="decimal">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="targetPrice">Target Price</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">₹</span>
+                    <input type="text" id="targetPrice" class="has-currency" placeholder="0" inputmode="decimal">
+                </div>
+            </div>
+
+            <div class="results">
+                <div class="result-item">
+                    <div class="result-label">Lot Size You Can Buy</div>
+                    <div class="result-value neutral" id="lotSize">0</div>
+                    <div class="result-subtext">shares</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Profit On Target</div>
+                    <div class="result-value profit" id="profitOnTarget">₹0</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Max Loss</div>
+                    <div class="result-value loss" id="maxLoss">₹0</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Risk:Reward Ratio</div>
+                    <div class="result-value neutral" id="riskReward">1:0</div>
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetCalculator()">Reset All</button>
+        </div>
+    </div>
+
+    <footer>
+        Made by Madhav Sajikumar
+    </footer>
+
+    <script>
+        const inputs = {
+            capital: document.getElementById('capital'),
+            riskPercent: document.getElementById('riskPercent'),
+            entryPrice: document.getElementById('entryPrice'),
+            stopLoss: document.getElementById('stopLoss'),
+            targetPrice: document.getElementById('targetPrice')
+        };
+
+        const outputs = {
+            lotSize: document.getElementById('lotSize'),
+            profitOnTarget: document.getElementById('profitOnTarget'),
+            maxLoss: document.getElementById('maxLoss'),
+            riskReward: document.getElementById('riskReward')
+        };
+
+        const riskButtons = document.querySelectorAll('.risk-btn');
+        const positionButtons = document.querySelectorAll('.position-btn');
+        let currentPosition = 'long';
+
+        // Position Management
+        function setPosition(position) {
+            currentPosition = position;
+            positionButtons.forEach(btn => {
+                if (btn.dataset.position === position) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            calculate();
+        }
+
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeButton(newTheme);
+        }
+
+        function updateThemeButton(theme) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (theme === 'dark') {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+
+        // Initialize theme on page load
+        loadTheme();
+
+        // Format number to Indian format
+        function formatIndianNumber(num) {
+            if (!num || isNaN(num)) return '';
+            
+            const numStr = num.toString();
+            const [integer, decimal] = numStr.split('.');
+            
+            let lastThree = integer.substring(integer.length - 3);
+            let otherNumbers = integer.substring(0, integer.length - 3);
+            
+            if (otherNumbers !== '') {
+                lastThree = ',' + lastThree;
+            }
+            
+            let formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+            
+            if (decimal) {
+                formatted += '.' + decimal;
+            }
+            
+            return formatted;
+        }
+
+        // Parse Indian formatted number to float
+        function parseIndianNumber(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(/,/g, ''));
+        }
+
+        // Handle input formatting
+        function handleInputFormat(input) {
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/,/g, '');
+                
+                // Allow only numbers and one decimal point
+                value = value.replace(/[^\d.]/g, '');
+                
+                // Prevent multiple decimal points
+                const parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                const cursorPosition = e.target.selectionStart;
+                const oldLength = e.target.value.length;
+                
+                if (value) {
+                    const [integer, decimal] = value.split('.');
+                    let formatted = formatIndianNumber(integer);
+                    if (decimal !== undefined) {
+                        formatted += '.' + decimal;
+                    }
+                    e.target.value = formatted;
+                } else {
+                    e.target.value = '';
+                }
+                
+                // Adjust cursor position
+                const newLength = e.target.value.length;
+                const newPosition = cursorPosition + (newLength - oldLength);
+                e.target.setSelectionRange(newPosition, newPosition);
+                
+                calculate();
+            });
+        }
+
+        // Apply formatting to all price inputs
+        handleInputFormat(inputs.capital);
+        handleInputFormat(inputs.entryPrice);
+        handleInputFormat(inputs.stopLoss);
+        handleInputFormat(inputs.targetPrice);
+        handleInputFormat(inputs.riskPercent);
+
+        // Risk button handlers
+        riskButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const risk = btn.dataset.risk;
+                inputs.riskPercent.value = risk;
+                updateActiveButton(risk);
+                calculate();
+            });
+        });
+
+        // Update active button state
+        function updateActiveButton(risk) {
+            riskButtons.forEach(btn => {
+                if (btn.dataset.risk === risk) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Monitor risk percent for button state
+        inputs.riskPercent.addEventListener('input', () => {
+            updateActiveButton(inputs.riskPercent.value);
+        });
+
+        function calculate() {
+            const capital = parseIndianNumber(inputs.capital.value) || 0;
+            const riskPercent = parseIndianNumber(inputs.riskPercent.value) || 0;
+            const entryPrice = parseIndianNumber(inputs.entryPrice.value) || 0;
+            const stopLoss = parseIndianNumber(inputs.stopLoss.value) || 0;
+            const targetPrice = parseIndianNumber(inputs.targetPrice.value) || 0;
+
+            // Calculate max loss (risk amount)
+            const maxLossAmount = (capital * riskPercent) / 100;
+            outputs.maxLoss.textContent = '₹' + formatIndianNumber(Math.round(maxLossAmount));
+
+            // Calculate risk per share based on position type
+            let riskPerShare;
+            if (currentPosition === 'long') {
+                riskPerShare = entryPrice - stopLoss;
+            } else {
+                // Short position: stop loss is above entry
+                riskPerShare = stopLoss - entryPrice;
+            }
+
+            // Calculate lot size
+            let lotSize = 0;
+            if (riskPerShare > 0 && maxLossAmount > 0) {
+                lotSize = Math.floor(maxLossAmount / riskPerShare);
+            }
+            outputs.lotSize.textContent = formatIndianNumber(lotSize);
+
+            // Calculate profit on target based on position type
+            let profitOnTarget = 0;
+            if (currentPosition === 'long') {
+                if (targetPrice > entryPrice && lotSize > 0) {
+                    profitOnTarget = (targetPrice - entryPrice) * lotSize;
+                }
+            } else {
+                // Short position: profit when target is below entry
+                if (entryPrice > targetPrice && lotSize > 0) {
+                    profitOnTarget = (entryPrice - targetPrice) * lotSize;
+                }
+            }
+            outputs.profitOnTarget.textContent = '₹' + formatIndianNumber(Math.round(profitOnTarget));
+
+            // Calculate Risk:Reward Ratio
+            let riskRewardRatio = '1:0';
+            if (riskPerShare > 0) {
+                let reward;
+                if (currentPosition === 'long') {
+                    reward = targetPrice - entryPrice;
+                } else {
+                    reward = entryPrice - targetPrice;
+                }
+                const ratio = reward / riskPerShare;
+                if (ratio > 0) {
+                    riskRewardRatio = '1:' + ratio.toFixed(2);
+                }
+            }
+            outputs.riskReward.textContent = riskRewardRatio;
+        }
+
+        function resetCalculator() {
+            Object.values(inputs).forEach(input => {
+                input.value = '';
+            });
+            riskButtons.forEach(btn => btn.classList.remove('active'));
+            outputs.lotSize.textContent = '0';
+            outputs.profitOnTarget.textContent = '₹0';
+            outputs.maxLoss.textContent = '₹0';
+            outputs.riskReward.textContent = '1:0';
+        }
+
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
