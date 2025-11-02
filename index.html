@@ -21,6 +21,10 @@
             --input-bg: #ffffff;
             --hover-bg: #f3f4f6;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* NEW: Warning colors */
+            --warn-bg: #fffbeb;
+            --warn-border: #fde047;
+            --warn-text: #b45309;
         }
 
         [data-theme="dark"] {
@@ -33,6 +37,10 @@
             --input-bg: #1e293b;
             --hover-bg: #334155;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            /* NEW: Warning colors dark */
+            --warn-bg: #452c0a;
+            --warn-border: #fde047;
+            --warn-text: #fef08a;
         }
 
         body {
@@ -226,6 +234,15 @@
             color: #ef4444;
         }
 
+        /* NEW: Style for subtext below an input */
+        .input-subtext {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 10px;
+            padding-left: 4px;
+        }
+
         input[type="text"] {
             width: 100%;
             padding: 12px 16px;
@@ -283,13 +300,27 @@
             color: var(--bg-primary);
             border-color: var(--text-primary);
         }
+        
+        /* NEW: Warning Box Style */
+        .warning-box {
+            background: var(--warn-bg);
+            border: 2px solid var(--warn-border);
+            color: var(--warn-text);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
 
         .results {
             background: var(--bg-secondary);
             border: 2px solid var(--border-strong);
             border-radius: 12px;
             padding: 24px;
-            margin-top: 32px;
+            margin-top: 0; /* Removed margin-top to use warning box margin */
             transition: all 0.3s ease;
         }
 
@@ -473,6 +504,7 @@
                     <button class="risk-btn" data-risk="2.5">2.5%</button>
                     <button class="risk-btn" data-risk="3">3%</button>
                 </div>
+                <span class="input-subtext hidden" id="intendedMaxLossDisplay"></span>
             </div>
 
             <div class="divider"></div>
@@ -502,6 +534,8 @@
                     <span class="input-percent-display" id="targetPricePercent"></span>
                 </div>
             </div>
+
+            <div class="warning-box hidden" id="calculationWarning"></div>
 
             <div class="results">
                 <div class="result-item">
@@ -546,6 +580,10 @@
             targetPrice: document.getElementById('targetPrice'),
             stopLossPercent: document.getElementById('stopLossPercent'),
             targetPricePercent: document.getElementById('targetPricePercent'),
+            // NEW: Added Intended Max Loss and Warning elements
+            intendedMaxLossDisplay: document.getElementById('intendedMaxLossDisplay'),
+            calculationWarning: document.getElementById('calculationWarning'),
+            // END NEW
             fnoLotSize: document.getElementById('fnoLotSize'),
             fnoLotSizeGroup: document.getElementById('fnoLotSizeGroup'),
             equityRadio: document.getElementById('equityRadio'),
@@ -706,6 +744,9 @@
 
         // Calculate
         function calculate() {
+            // NEW: Hide warning at the start of every calculation
+            elements.calculationWarning.classList.add('hidden');
+
             const capital = parseIndianNumber(elements.capital.value) || 0;
             const riskPercent = parseIndianNumber(elements.riskPercent.value) || 0;
             const entryPrice = parseIndianNumber(elements.entryPrice.value) || 0;
@@ -715,45 +756,44 @@
 
             // --- Percentage Display Logic ---
             if (entryPrice > 0) {
-                // Stop Loss Percentage
                 if (stopLoss > 0) {
                     const slPercent = ((stopLoss - entryPrice) / entryPrice) * 100;
                     elements.stopLossPercent.textContent = `${slPercent.toFixed(2)}%`;
-                    elements.stopLossPercent.className = 'input-percent-display'; // Reset classes
-                    if (slPercent > 0) {
-                        elements.stopLossPercent.classList.add('profit');
-                    } else if (slPercent < 0) {
-                        elements.stopLossPercent.classList.add('loss');
-                    }
+                    elements.stopLossPercent.className = 'input-percent-display';
+                    if (slPercent > 0) elements.stopLossPercent.classList.add('profit');
+                    else if (slPercent < 0) elements.stopLossPercent.classList.add('loss');
                 } else {
                     elements.stopLossPercent.textContent = '';
                     elements.stopLossPercent.className = 'input-percent-display';
                 }
 
-                // Target Price Percentage
                 if (targetPrice > 0) {
                     const tpPercent = ((targetPrice - entryPrice) / entryPrice) * 100;
                     elements.targetPricePercent.textContent = `${tpPercent > 0 ? '+' : ''}${tpPercent.toFixed(2)}%`;
-                    elements.targetPricePercent.className = 'input-percent-display'; // Reset classes
-                    if (tpPercent > 0) {
-                        elements.targetPricePercent.classList.add('profit');
-                    } else if (tpPercent < 0) {
-                        elements.targetPricePercent.classList.add('loss');
-                    }
+                    elements.targetPricePercent.className = 'input-percent-display';
+                    if (tpPercent > 0) elements.targetPricePercent.classList.add('profit');
+                    else if (tpPercent < 0) elements.targetPricePercent.classList.add('loss');
                 } else {
                     elements.targetPricePercent.textContent = '';
                     elements.targetPricePercent.className = 'input-percent-display';
                 }
             } else {
-                // Clear percentages if no entry price
                 elements.stopLossPercent.textContent = '';
                 elements.stopLossPercent.className = 'input-percent-display';
                 elements.targetPricePercent.textContent = '';
                 elements.targetPricePercent.className = 'input-percent-display';
             }
             
-            // Calculate max loss
+            // --- NEW: Calculate and display Intended Max Loss ---
             const maxLossAmount = (capital * riskPercent) / 100;
+            if (maxLossAmount > 0) {
+                elements.intendedMaxLossDisplay.textContent = 'Your Intended Max Loss is: ₹' + formatIndianNumber(Math.round(maxLossAmount));
+                elements.intendedMaxLossDisplay.classList.remove('hidden');
+            } else {
+                elements.intendedMaxLossDisplay.textContent = '';
+                elements.intendedMaxLossDisplay.classList.add('hidden');
+            }
+            // Also update the results box
             elements.maxLoss.textContent = '₹' + formatIndianNumber(Math.round(maxLossAmount));
 
             // Calculate risk per share
@@ -776,17 +816,14 @@
                 elements.lotSize.textContent = formatIndianNumber(lotSize);
                 elements.lotSizeSubtext.textContent = 'shares';
             } else {
-                // --- F&O LOGIC (FIXED) ---
                 let riskBasedLots = 0;
                 let affordableLots = 0;
 
-                // 1. Calculate Risk-Based Lots (Original Logic)
                 if (riskPerShare > 0 && maxLossAmount > 0 && fnoLotSize > 0) {
                     const riskPerLot = riskPerShare * fnoLotSize;
                     riskBasedLots = Math.floor(maxLossAmount / riskPerLot);
                 }
 
-                // 2. Calculate Affordability-Based Lots (New Logic)
                 if (entryPrice > 0 && fnoLotSize > 0 && capital > 0) {
                     const costPerLot = entryPrice * fnoLotSize;
                     if (costPerLot > 0) {
@@ -794,18 +831,12 @@
                     }
                 }
                 
-                // 3. Determine Final Lot Size (Must be affordable AND within risk limits)
-                // The final size is the MINIMUM of what's affordable and what's within risk.
                 lotSize = Math.min(riskBasedLots, affordableLots);
-
-                // If either calculation resulted in 0 (e.g., no SL, or not enough capital),
-                // Math.min will correctly return 0.
                 
                 totalQuantity = lotSize * fnoLotSize;
                 
                 elements.lotSize.textContent = formatIndianNumber(lotSize);
                 elements.lotSizeSubtext.textContent = `lots (${formatIndianNumber(totalQuantity)} shares)`;
-                // --- END F&O LOGIC (FIXED) ---
             }
 
             // Calculate profit on target
@@ -836,6 +867,31 @@
                 }
             }
             elements.riskReward.textContent = riskRewardRatio;
+
+            // --- NEW: Warning Logic ---
+            const allInputsFilled = capital > 0 && riskPercent > 0 && entryPrice > 0 && stopLoss > 0;
+            
+            if (lotSize === 0 && allInputsFilled) {
+                let warningText = '';
+                
+                if (riskPerShare <= 0) {
+                    warningText = 'Stop Loss must be ' + (currentPosition === 'long' ? 'below' : 'above') + ' Entry to calculate risk.';
+                } else if (currentTradeType === 'fno' && fnoLotSize > 0 && (entryPrice * fnoLotSize) > capital) {
+                    warningText = 'You do not have enough capital (₹' + formatIndianNumber(capital) + ') to buy even one lot, which costs ₹' + formatIndianNumber(entryPrice * fnoLotSize) + '.';
+                } else if (riskPerShare > maxLossAmount && currentTradeType === 'equity') {
+                    warningText = 'Your risk per share (₹' + formatIndianNumber(riskPerShare.toFixed(2)) + ') is greater than your Intended Max Loss (₹' + formatIndianNumber(Math.round(maxLossAmount)) + '). No shares can be purchased.';
+                } else if (currentTradeType === 'fno' && fnoLotSize > 0) {
+                    const riskPerLot = riskPerShare * fnoLotSize;
+                    if (riskPerLot > maxLossAmount) {
+                        warningText = 'Your risk per lot (₹' + formatIndianNumber(riskPerLot.toFixed(2)) + ') is greater than your Intended Max Loss (₹' + formatIndianNumber(Math.round(maxLossAmount)) + '). No lots can be purchased.';
+                    }
+                }
+                
+                if (warningText) {
+                    elements.calculationWarning.textContent = warningText;
+                    elements.calculationWarning.classList.remove('hidden');
+                }
+            }
         }
 
         // Reset
@@ -851,6 +907,10 @@
             elements.stopLossPercent.className = 'input-percent-display';
             elements.targetPricePercent.textContent = '';
             elements.targetPricePercent.className = 'input-percent-display';
+            
+            // NEW: Hide new elements on reset
+            elements.intendedMaxLossDisplay.classList.add('hidden');
+            elements.calculationWarning.classList.add('hidden');
             
             elements.equityRadio.checked = true;
             elements.fnoLotSizeGroup.classList.add('hidden');
